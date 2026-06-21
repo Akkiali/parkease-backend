@@ -15,6 +15,7 @@ import com.parkease.repository.LocationRepository;
 import com.parkease.repository.ParkingSlotRepository;
 import com.parkease.repository.UserRepository;
 import java.util.List;
+import java.time.Duration;
 
 @Service
 public class BookingService {
@@ -95,12 +96,12 @@ public class BookingService {
         }
 
         booking.setBookingStatus(
-                "BOOKED");
+                "ACTIVE");
 
         Booking savedBooking =
                 bookingRepository.save(booking);
 
-        slot.setStatus("BOOKED");
+        slot.setStatus("ACTIVE");
 
         parkingSlotRepository.save(slot);
         
@@ -211,6 +212,22 @@ public class BookingService {
                 location.getAvailableSlots() + 1);
 
         locationRepository.save(location);
+        
+        String subject =
+                "Parking Booking Cancelled";
+
+        String body =
+                "Hello " + booking.getUser().getFullName() + ",\n\n" +
+                "Your parking booking has been cancelled successfully.\n\n" +
+                "Booking ID: " + booking.getId() + "\n" +
+                "Station: " + booking.getLocation().getStationName() + "\n" +
+                "Slot Number: " + booking.getParkingSlot().getSlotNumber() + "\n\n" +
+                "Thank you for using ParkEase.";
+
+        emailService.sendEmail(
+                booking.getUser().getEmail(),
+                subject,
+                body);
 
         return "Booking Cancelled Successfully";
     }
@@ -223,6 +240,76 @@ public class BookingService {
                                 "User Not Found"));
 
         return bookingRepository.findByUser(user);
+    }
+    
+    public Booking checkoutBooking(Long id) {
+
+        Booking booking = bookingRepository.findById(id)
+                .orElseThrow(() ->
+                        new RuntimeException(
+                                "Booking Not Found"));
+
+        booking.setEndTime(LocalDateTime.now());
+
+        Duration duration = Duration.between(
+                booking.getStartTime(),
+                booking.getEndTime());
+
+        long hours = duration.toHours();
+
+        if (duration.toMinutesPart() > 0) {
+            hours++;
+        }
+
+        if (hours == 0) {
+            hours = 1;
+        }
+
+        double rate;
+
+        if ("CAR".equalsIgnoreCase(
+                booking.getVehicleType())) {
+
+            rate = booking.getLocation()
+                    .getFourWheelerPrice();
+
+        } else {
+
+            rate = booking.getLocation()
+                    .getTwoWheelerPrice();
+        }
+
+        booking.setAmount(hours * rate);
+        booking.setBookingStatus("COMPLETED");
+
+        ParkingSlot slot = booking.getParkingSlot();
+        slot.setStatus("AVAILABLE");
+        parkingSlotRepository.save(slot);
+
+        Location location = booking.getLocation();
+        location.setAvailableSlots(
+                location.getAvailableSlots() + 1);
+        locationRepository.save(location);
+        
+        String subject =
+                "Parking Checkout Completed";
+
+        String body =
+                "Hello " + booking.getUser().getFullName() + ",\n\n" +
+                "Your parking session has been completed successfully.\n\n" +
+                "Booking ID: " + booking.getId() + "\n" +
+                "Station: " + booking.getLocation().getStationName() + "\n" +
+                "Slot Number: " + booking.getParkingSlot().getSlotNumber() + "\n" +
+                "Amount Payable: ₹" + booking.getAmount() + "\n\n" +
+                "Please make payment at the parking counter.\n\n" +
+                "Thank you for using ParkEase.";
+
+        emailService.sendEmail(
+                booking.getUser().getEmail(),
+                subject,
+                body);
+
+        return bookingRepository.save(booking);
     }
     
 }

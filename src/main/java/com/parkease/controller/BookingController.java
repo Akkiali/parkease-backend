@@ -57,4 +57,11 @@ public class BookingController {
 
         return bookingService.getBookingsByUser(userId);
     }
+    
+    @PutMapping("/checkout/{id}")
+    public Booking checkoutBooking(
+            @PathVariable Long id) {
+
+        return bookingService.checkoutBooking(id);
+    }
 }

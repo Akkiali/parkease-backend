@@ -58,10 +58,20 @@ public class DashboardService {
                 bookingRepository
                         .countByBookingStatus(
                                 "CANCELLED"));
+        
+        response.setActiveBookings(
+                bookingRepository
+                        .countByBookingStatus(
+                                "ACTIVE"));
+
+        response.setCompletedBookings(
+                bookingRepository
+                        .countByBookingStatus(
+                                "COMPLETED"));
 
         double revenue = bookingRepository.findAll()
                 .stream()
-                .filter(b -> "BOOKED"
+                .filter(b -> "COMPLETED"
                         .equals(b.getBookingStatus()))
                 .mapToDouble(Booking::getAmount)
                 .sum();

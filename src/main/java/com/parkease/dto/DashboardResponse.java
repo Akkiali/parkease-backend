@@ -12,6 +12,9 @@ public class DashboardResponse {
     private long cancelledBookings;
     private double totalRevenue;
     
+    private long activeBookings;
+    private long completedBookings;
+    
     
 
     public long getTotalUsers() {
@@ -76,5 +79,21 @@ public class DashboardResponse {
 
     public void setTotalRevenue(double totalRevenue) {
         this.totalRevenue = totalRevenue;
+    }
+    
+    public long getActiveBookings() {
+        return activeBookings;
+    }
+
+    public void setActiveBookings(long activeBookings) {
+        this.activeBookings = activeBookings;
+    }
+
+    public long getCompletedBookings() {
+        return completedBookings;
+    }
+
+    public void setCompletedBookings(long completedBookings) {
+        this.completedBookings = completedBookings;
     }
 }
